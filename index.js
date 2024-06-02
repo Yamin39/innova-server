@@ -31,6 +31,7 @@ async function run() {
     await client.connect();
 
     const roomsCollection = client.db("innovaDB").collection("rooms");
+    const bookingsCollection = client.db("innovaDB").collection("bookings");
 
     // rooms
     app.get("/rooms", async (req, res) => {
@@ -55,6 +56,12 @@ async function run() {
     app.get("/room-details/:id", async (req, res) => {
       const id = req.params.id;
       const result = await roomsCollection.findOne({ _id: new ObjectId(id) });
+      res.send(result);
+    });
+
+    // bookings
+    app.post("/bookings", async (req, res) => {
+      const result = await bookingsCollection.insertOne(req.body);
       res.send(result);
     });
 
