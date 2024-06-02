@@ -39,6 +39,18 @@ async function run() {
       res.send(result);
     });
 
+    // filter by price range
+    app.get("/filter", async (req, res) => {
+      const gte = parseInt(req.query.gte);
+      const lte = parseInt(req.query.lte);
+      const query = {
+        price_per_night: { $gte: gte, $lte: lte },
+      };
+      const cursor = roomsCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
