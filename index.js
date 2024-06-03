@@ -105,6 +105,18 @@ async function run() {
       res.send(result);
     });
 
+    // add review
+    app.patch("/add-review/:id", async (req, res) => {
+      const filter = { _id: new ObjectId(req.params.id) };
+      const updatedDoc = {
+        $push: {
+          reviews: req.body.review,
+        },
+      };
+      const result = await roomsCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
