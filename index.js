@@ -112,7 +112,7 @@ async function run() {
       const filter = { _id: new ObjectId(req.params.id) };
       const updatedDoc = {
         $push: {
-          reviews: req.body.review,
+          reviews: req.body,
         },
       };
       const result = await roomsCollection.updateOne(filter, updatedDoc);
