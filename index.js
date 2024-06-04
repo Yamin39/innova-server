@@ -1,11 +1,13 @@
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const express = require("express");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 5000;
 
-// middleware
+// middlewares
 app.use(
   cors({
     origin: ["http://localhost:5173"],
@@ -13,6 +15,27 @@ app.use(
   })
 );
 app.use(express.json());
+app.use(cookieParser());
+
+// custom middleware
+const verifyToken = async (req, res, next) => {
+  const token = req.cookies?.token;
+  console.log(token);
+  if (!token) {
+    return res.status(401).send({ message: "Unauthorized" });
+  }
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    // error
+    if (err) {
+      console.log(err);
+      return res.status(401).send({ message: "Unauthorized" });
+    }
+    // decoded
+    console.log("value of decoded", decoded);
+    req.user = decoded;
+    next();
+  });
+};
 
 const uri = "mongodb://localhost:27017";
 
@@ -35,6 +58,24 @@ async function run() {
     const roomsCollection = client.db("innovaDB").collection("rooms");
     const bookingsCollection = client.db("innovaDB").collection("bookings");
     const reviewsCollection = client.db("innovaDB").collection("reviews");
+
+    // authentication
+    app.post("/jwt", async (req, res) => {
+      const user = req.body;
+      console.log(user);
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "2s" });
+      res
+        .cookie("token", token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production" ? true : false,
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+        })
+        .send({ success: true });
+    });
+
+    app.post("/logout", async (req, res) => {
+      res.clearCookie("token", { maxAge: 0 }).send({ success: true });
+    });
 
     // rooms
     app.get("/rooms", async (req, res) => {
@@ -81,7 +122,8 @@ async function run() {
     });
 
     // bookings for specific user
-    app.get("/bookings", async (req, res) => {
+    app.get("/bookings", verifyToken, async (req, res) => {
+      console.log("token", req.cookies.token);
       const email = req?.query?.email;
       const query = { email: email };
       const result = await bookingsCollection.find(query).toArray();
