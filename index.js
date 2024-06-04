@@ -126,6 +126,12 @@ async function run() {
       res.send(result);
     });
 
+    // reviews for testimonials
+    app.get("/review", async (req, res) => {
+      const result = await reviewsCollection.find({}, { sort: { timestamp: -1 } }).toArray();
+      res.send(result);
+    });
+
     // update review status of a booking
     app.patch("/booking/:id", async (req, res) => {
       const filter = { _id: new ObjectId(req.params.id) };
