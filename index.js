@@ -34,6 +34,7 @@ async function run() {
 
     const roomsCollection = client.db("innovaDB").collection("rooms");
     const bookingsCollection = client.db("innovaDB").collection("bookings");
+    const reviewsCollection = client.db("innovaDB").collection("reviews");
 
     // rooms
     app.get("/rooms", async (req, res) => {
@@ -116,6 +117,12 @@ async function run() {
         },
       };
       const result = await roomsCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    });
+
+    // add review to its collection
+    app.post("/review", async (req, res) => {
+      const result = await reviewsCollection.insertOne(req.body);
       res.send(result);
     });
 
