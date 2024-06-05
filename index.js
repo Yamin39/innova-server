@@ -20,7 +20,7 @@ app.use(cookieParser());
 // custom middleware
 const verifyToken = async (req, res, next) => {
   const token = req.cookies?.token;
-  console.log("token inside verify middleware", token);
+  // console.log("token inside verify middleware", token);
   if (!token) {
     return res.status(401).send({ message: "Unauthorized" });
   }
@@ -31,7 +31,7 @@ const verifyToken = async (req, res, next) => {
       return res.status(401).send({ message: "Unauthorized" });
     }
     // decoded
-    console.log("value of decoded", decoded);
+    // console.log("value of decoded", decoded);
     req.user = decoded;
     next();
   });
@@ -68,8 +68,8 @@ async function run() {
 
     app.post("/jwt", async (req, res) => {
       const user = req.body;
-      console.log(user);
-      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "10h" });
+      // console.log(user);
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "365d" });
       res.cookie("token", token, cookieOption).send({ success: true });
     });
 
@@ -123,7 +123,7 @@ async function run() {
 
     // bookings for specific user
     app.get("/bookings", verifyToken, async (req, res) => {
-      console.log("token", req.cookies.token);
+      // console.log("token", req.cookies.token);
       const email = req?.query?.email;
       const query = { email: email };
       const result = await bookingsCollection.find(query).toArray();
@@ -188,7 +188,7 @@ async function run() {
 
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    // console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
