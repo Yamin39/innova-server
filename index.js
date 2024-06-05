@@ -10,7 +10,7 @@ const port = process.env.PORT || 5000;
 // middlewares
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: ["http://localhost:5173", "https://innova-yamin39.web.app", "https://innova-yamin39.firebaseapp.com"],
     credentials: true,
   })
 );
@@ -20,7 +20,7 @@ app.use(cookieParser());
 // custom middleware
 const verifyToken = async (req, res, next) => {
   const token = req.cookies?.token;
-  console.log(token);
+  console.log("token inside verify middleware", token);
   if (!token) {
     return res.status(401).send({ message: "Unauthorized" });
   }
@@ -37,9 +37,9 @@ const verifyToken = async (req, res, next) => {
   });
 };
 
-const uri = "mongodb://localhost:27017";
+// const uri = "mongodb://localhost:27017";
 
-// const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.6fu63x8.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.6fu63x8.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -53,28 +53,28 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     const roomsCollection = client.db("innovaDB").collection("rooms");
     const bookingsCollection = client.db("innovaDB").collection("bookings");
     const reviewsCollection = client.db("innovaDB").collection("reviews");
 
     // authentication
+    const cookieOption = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production" ? true : false,
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+    };
+
     app.post("/jwt", async (req, res) => {
       const user = req.body;
       console.log(user);
-      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "2s" });
-      res
-        .cookie("token", token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production" ? true : false,
-          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-        })
-        .send({ success: true });
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "10h" });
+      res.cookie("token", token, cookieOption).send({ success: true });
     });
 
     app.post("/logout", async (req, res) => {
-      res.clearCookie("token", { maxAge: 0 }).send({ success: true });
+      res.clearCookie("token", { ...cookieOption, maxAge: 0 }).send({ success: true });
     });
 
     // rooms
@@ -187,7 +187,7 @@ async function run() {
     });
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
