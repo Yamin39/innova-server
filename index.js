@@ -79,7 +79,15 @@ async function run() {
 
     // rooms
     app.get("/rooms", async (req, res) => {
-      const cursor = roomsCollection.find();
+      const search = req.query.search;
+      const query = {};
+      if (search !== "undefined") {
+        query.room_name = {
+          $regex: search,
+          $options: "i",
+        };
+      }
+      const cursor = roomsCollection.find(query);
       const result = await cursor.toArray();
       res.send(result);
     });
